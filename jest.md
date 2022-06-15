@@ -1,6 +1,6 @@
 # Jest
 
-## 共通
+## マッチャ
 
 ### 文字列型の正規表現との一致判定
 
@@ -82,7 +82,7 @@ const can1 = {
 }
 const can2 = {
   flavor: 'grapefruit',
-  ounces: 0.3,
+  ounces: expect.any(Number) as Number,
 }
 
 test('オブジェクト型の浮動小数点型のパラメータに計算が入った値が代入された時は、個別に確認する必要がある', () => {
@@ -117,7 +117,7 @@ expect(obj).toEqual({
   id: 1,
   name: 'hoge',
   // Numberインスタンスであればパスする
-  createdAt: expect.any(Number) as number,
+  createdAt:  expect.any(Number) as Number,
 })
 ```
 
@@ -142,6 +142,17 @@ test('undefined判定', () => {
 ```
 
 falsyな値かどうかを判定するtoBeFalsyマッチャもありますが、これだと0や falseや空文字でもテストを通過してしまうので適切ではありません。
+
+値がnullかundefinedなら通過するテストを記述する場合は、expect.anythingを使ってnot.toEqualを行います。
+```tsx
+test('nullかundefined', () => {
+expect(null).not.toEqual(expect.anything())
+expect(undefined).not.toEqual(expect.anything())
+expect(1).toEqual(expect.anything())
+})
+```
+
+## モック化
 
 ### モジュールのモック化
 
@@ -181,7 +192,7 @@ jest.mock('./sound-player')
 
 クラスのメソッドがundefindではない値を返すようにしたい場合は、3つある方法の中から適切なものを選択します。
 
-#### マニュアルモック
+#### プロジェクト上の全てのテストで使うモッククラス
 
 「\_\_mocks\_\_」ディレクトリ内にモックした実装を定義できます。これを使用すると全てのテストファイル上で該当するモックを使用できます。
 
@@ -207,7 +218,7 @@ beforeEach(() => {
 })
 ```
 
-#### jest.mock() をモジュールファクトリ引数で呼ぶ
+#### ファイル内でのみ使うモック
 
 jest.mock()でモジュールファクトリー引数に生成するモックを定義する高階関数を設定することで、実際にテストでコンストラクタがここで定義したものに置き換わります。使用するファイルが限定されているか、ファイルごとに別の実装を定義したい場合に使用します。
 
@@ -217,7 +228,7 @@ const mockPlaySoundFile = jest.fn()
 jest.mock('./sound-player', () => jest.fn().mockImplementation(() => ({ playSoundFile: mockPlaySoundFile })))
 ```
 
-#### mockImplementation() または mockImplementationOnce() を使用したモックを置き換える
+#### ファイル内でのみ使うモッククラス
 
 mockImplementation() (またはmockImplementationOnce())を使用することで、既存のモックを書き換えることができます。テストごとに実装を変更したい場合に使用します。
 
@@ -258,9 +269,9 @@ global.fetch = jest.fn(
 ) as jest.Mock
 ```
 
-実際の実装ではWindows.fetchを使用していますが、Jestが動作するNode.jsには存在しないので、代わりにglobal.fetchを使用します。
+実際の実装ではwindow.fetchを使用していますが、Jestが動作するNode.jsには存在しないので、代わりにglobal.fetchを使用します。
 
-### 非同期処理で結果が resolve になることを検証
+### 非同期処理が正常に終了することを検証
 
 expectの.resolvesマッチャを使用します。そのPromiseが解決するまで待機し、さらにその値をマッチングできます。
 Promiseがrejectした場合、テストは自動的に失敗します。
@@ -280,7 +291,7 @@ test('プロミスはlemonを返す', async () => {
 
 returnは記述しなければ処理を待たずに終了してしまうので省略できません。
 
-### 非同期処理で結果が reject になることを検証
+### 非同期処理でthrowが返されることを検証
 
 expectの.rejectsマッチャを使用します。そのPromiseが解決するまで待機し、さらにその値をマッチングできます。
 Promiseが成功した場合、テストは自動的に失敗します。
